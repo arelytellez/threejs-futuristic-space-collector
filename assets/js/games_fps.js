@@ -16,15 +16,9 @@ timer.connect(document);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x88ccee);
-scene.fog = new THREE.Fog(0x88ccee, 0, 50);
+scene.fog = new THREE.Fog(0x88ccee, 0, 10,200);
+let sueloY = 0;
 
-/*
-const testCube = new THREE.Mesh(
-    new THREE.BoxGeometry(1,1,1),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-);
-testCube.position.set(0, 1, -5);
-scene.add(testCube);*/
 
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -69,7 +63,7 @@ container.appendChild(stats.domElement);
 const GRAVITY = 9.8 * 3; // más natural en Three.js
 
 const NUM_SPHERES = 100;
-const SPHERE_RADIUS = 0.2;
+const SPHERE_RADIUS = 0.08;
 
 const STEPS_PER_FRAME = 5;
 
@@ -78,6 +72,9 @@ const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xdede8d });
 
 const spheres = [];
 let sphereIdx = 0;
+
+
+
 
 for (let i = 0; i < NUM_SPHERES; i++) {
 
@@ -231,16 +228,11 @@ if (playerOnFloor) {
     //.camera.position.copy(playerCollider.end);
 
     // 📷 altura de ojos realista
-//camera.position.copy(playerCollider.end);
-//camera.position.y -= 0.3;
 
 const alturaOjos = 1.6; // altura real de ojos humanos
+ camera.position.copy(playerCollider.end);
+ //camera.position.y += 0.3; // altura de ojos
 
-camera.position.set(
-    playerCollider.end.x,
-    playerCollider.start.y + alturaOjos,
-    playerCollider.end.z
-);
 
 // 🔥 fuerza al jugador a mantenerse en el suelo
 if (playerOnFloor) {
@@ -432,28 +424,17 @@ loader.load('scene.gltf', (gltf) => {
 
 
     // 🔥 escala más realista
-const alturaObjetivo = 25; // antes 6 → ahora 20
-const escala = alturaObjetivo / size.y;
-
+const alturaObjetivo = 15;
+let escala = alturaObjetivo / size.y;
 modelo.scale.setScalar(escala);
 
+// 📍 reposicionar jugador arriba del suelo REAL
+//const sueloY = box.min.y * escala;
+sueloY = box.min.y * escala;
+playerCollider.start.set(0, sueloY + 0.1, 0);
+playerCollider.end.set(0, sueloY + 1.6, 0);
+playerCollider.radius = 0.25;
 
-    // 🎯 Queremos que edificios midan aprox 5-10 metros
-//const alturaObjetivo = 6; // ajusta si quieres más grande o chico
-//const escala = alturaObjetivo / size.y;
-
-//modelo.scale.setScalar(escala);
-
-    // 🎯 escalar correctamente
-
-//    let escala = 2 / size.y;
-//escala *= 1.5;
-
-//modelo.scale.setScalar(escala);
-
-    // 🎯 ESCALA REAL AUTOMÁTICA
-    //const escala = 2 / size.y;  
-    //modelo.scale.setScalar(escala);
 
     // 📍 POSICIÓN
     modelo.position.set(0, 0, 0);
@@ -465,10 +446,8 @@ modelo.scale.setScalar(escala);
     worldOctree.fromGraphNode(modelo);
 
     // 👤 JUGADOR (altura realista)
-// 👤 altura promedio humana ≈ 1.7 - 1.8
-playerCollider.start.set(0, 0.5, 0);
-playerCollider.end.set(0, 4.5, 0);
-playerCollider.radius = 0.8;
+
+playerCollider.radius = 0.3;
 
     modelo.traverse(child => {
         if (child.isMesh) {
