@@ -224,16 +224,26 @@ if (playerOnFloor) {
 }
 
     playerCollisions();
+    if (playerOnFloor) {
+    // 👇 pega el jugador al suelo
+    playerVelocity.y = -0.5;
+}
 
     //.camera.position.copy(playerCollider.end);
 
     // 📷 altura de ojos realista
 
-const alturaOjos = 1.6; // altura real de ojos humanos
- camera.position.copy(playerCollider.end);
- camera.position.y -= 0.2; // 👈 nivel de ojos real
+//const alturaOjos = 1.6; // altura real de ojos humanos
+// camera.position.copy(playerCollider.end);
+// camera.position.y -= 0.2; // 👈 nivel de ojos real
  
+const ALTURA_OJOS = 1.4;
 
+camera.position.set(
+    playerCollider.end.x,
+    playerCollider.start.y + ALTURA_OJOS,
+    playerCollider.end.z
+);
  //camera.position.y += 0.3; // altura de ojos
 
 
@@ -423,7 +433,7 @@ loader.load('scene.gltf', (gltf) => {
     const box = new THREE.Box3().setFromObject(modelo);
     const size = box.getSize(new THREE.Vector3());
 
-    console.log("Tamaño del modelo:", size);
+    //console.log("Tamaño del modelo:", size);
 
 
     // 🔥 escala más realista
@@ -432,20 +442,24 @@ let escala = alturaObjetivo / size.y;
 modelo.scale.setScalar(escala);*/
 
 // 🔥 ESCALA CORRECTA (realista)
-const ALTURA_REAL = 7; // casa de 2 pisos real
+//const ALTURA_REAL = 7; // casa de 2 pisos real
 
-const escala = ALTURA_REAL / size.y;
-modelo.scale.setScalar(escala);
+//const escala = ALTURA_REAL / size.y;
+//modelo.scale.setScalar(escala);
+modelo.scale.set(1, 1, 1);
 
 // 🔥 MUY IMPORTANTE: recalcular bounding box después de escalar
 box.setFromObject(modelo);
 
-// 🔥 obtener suelo correctamente
-sueloY = box.min.y;
+// 🔥 CORREGIR ALTURA DEL MODELO
+modelo.position.y -= box.min.y;
+
+// 🔥 AHORA EL SUELO ES 0
+sueloY = 0;
 
 // 📍 reposicionar jugador arriba del suelo REAL
 //const sueloY = box.min.y * escala;
-sueloY = box.min.y;
+//sueloY = box.min.y;
 /*playerCollider.start.set(0, sueloY + 0.1, 0);
 playerCollider.end.set(0, sueloY + 1.6, 0);
 playerCollider.radius = 0.25;*/
@@ -456,14 +470,14 @@ playerCollider.end.set(0, sueloY + ALTURA_JUGADOR, 0);
 playerCollider.radius = 0.3;*/
 
 const ALTURA_JUGADOR = 1.7;
-const RADIO = 0.18;
+const RADIO = 0.25;
 
 // 🔥 ajustar capsule correctamente
 playerCollider.radius = RADIO;
 
 // cápsula centrada correctamente
-playerCollider.start.set(0, sueloY + RADIO, 0);
-playerCollider.end.set(0, sueloY + ALTURA_JUGADOR - RADIO, 0);
+playerCollider.start.set(0, RADIO - 0.05, 0);
+playerCollider.end.set(0, ALTURA_JUGADOR - 0.05, 0);
 
     // 📍 POSICIÓN
     modelo.position.set(0, 0, 0);
@@ -472,7 +486,7 @@ playerCollider.end.set(0, sueloY + ALTURA_JUGADOR - RADIO, 0);
 
     // 🔥 COLISIONES
     worldOctree.clear();
-    //worldOctree.fromGraphNode(modelo);
+    worldOctree.fromGraphNode(modelo);
     const floor = new THREE.Mesh(
     new THREE.BoxGeometry(50, 1, 50),
     new THREE.MeshBasicMaterial({ visible: false })
@@ -485,7 +499,7 @@ worldOctree.fromGraphNode(floor);
 
     // 👤 JUGADOR (altura realista)
 
-playerCollider.radius = 0.18;
+//playerCollider.radius = 0.18;
 
     modelo.traverse(child => {
         if (child.isMesh) {
