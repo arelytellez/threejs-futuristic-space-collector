@@ -231,6 +231,9 @@ if (playerOnFloor) {
 
 const alturaOjos = 1.6; // altura real de ojos humanos
  camera.position.copy(playerCollider.end);
+ camera.position.y -= 0.2; // 👈 nivel de ojos real
+ 
+
  //camera.position.y += 0.3; // altura de ojos
 
 
@@ -424,17 +427,43 @@ loader.load('scene.gltf', (gltf) => {
 
 
     // 🔥 escala más realista
-const alturaObjetivo = 15;
+/*const alturaObjetivo = 15;
 let escala = alturaObjetivo / size.y;
+modelo.scale.setScalar(escala);*/
+
+// 🔥 ESCALA CORRECTA (realista)
+const ALTURA_REAL = 7; // casa de 2 pisos real
+
+const escala = ALTURA_REAL / size.y;
 modelo.scale.setScalar(escala);
+
+// 🔥 MUY IMPORTANTE: recalcular bounding box después de escalar
+box.setFromObject(modelo);
+
+// 🔥 obtener suelo correctamente
+sueloY = box.min.y;
 
 // 📍 reposicionar jugador arriba del suelo REAL
 //const sueloY = box.min.y * escala;
-sueloY = box.min.y * escala;
-playerCollider.start.set(0, sueloY + 0.1, 0);
+sueloY = box.min.y;
+/*playerCollider.start.set(0, sueloY + 0.1, 0);
 playerCollider.end.set(0, sueloY + 1.6, 0);
-playerCollider.radius = 0.25;
+playerCollider.radius = 0.25;*/
+/*const ALTURA_JUGADOR = 1.7;
 
+playerCollider.start.set(0, sueloY + 0.1, 0);
+playerCollider.end.set(0, sueloY + ALTURA_JUGADOR, 0);
+playerCollider.radius = 0.3;*/
+
+const ALTURA_JUGADOR = 1.7;
+const RADIO = 0.18;
+
+// 🔥 ajustar capsule correctamente
+playerCollider.radius = RADIO;
+
+// cápsula centrada correctamente
+playerCollider.start.set(0, sueloY + RADIO, 0);
+playerCollider.end.set(0, sueloY + ALTURA_JUGADOR - RADIO, 0);
 
     // 📍 POSICIÓN
     modelo.position.set(0, 0, 0);
@@ -443,11 +472,20 @@ playerCollider.radius = 0.25;
 
     // 🔥 COLISIONES
     worldOctree.clear();
-    worldOctree.fromGraphNode(modelo);
+    //worldOctree.fromGraphNode(modelo);
+    const floor = new THREE.Mesh(
+    new THREE.BoxGeometry(50, 1, 50),
+    new THREE.MeshBasicMaterial({ visible: false })
+);
+
+floor.position.y = sueloY - 0.5;
+scene.add(floor);
+
+worldOctree.fromGraphNode(floor);
 
     // 👤 JUGADOR (altura realista)
 
-playerCollider.radius = 0.3;
+playerCollider.radius = 0.18;
 
     modelo.traverse(child => {
         if (child.isMesh) {
